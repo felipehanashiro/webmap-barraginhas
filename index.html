@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
+    <!-- ... (cabeçalho CSS/JS sem alterações) ... -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Webmap - Projeto Barraginhas</title>
@@ -22,10 +23,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* Define a altura do mapa */
+        /* ... (estilos CSS sem alterações) ... */
         #map { height: 100vh; }
-
-        /* Estilo personalizado para os pop-ups do Leaflet */
         .leaflet-popup-content-wrapper {
             border-radius: 8px;
         }
@@ -38,8 +37,6 @@
             color: #333;
             margin-right: 5px;
         }
-        
-        /* Caixa de erro da API */
         .api-error-box {
             position: absolute;
             bottom: 20px;
@@ -73,12 +70,16 @@
 </head>
 <body class="font-sans">
 
-    <!-- PAINEL DE TÍTULO E CONTADOR -->
+    <!-- PAINEL DE TÍTULO E CONTADOR (HTML ATUALIZADO) -->
     <div id="title-card" class="absolute top-4 left-4 z-[1000] p-4 bg-white bg-opacity-90 shadow-lg rounded-lg max-w-xs md:max-w-sm">
         <h4 class="text-xl font-semibold text-gray-800 m-0 mb-1">Projeto Barraginhas</h4>
         <p class="text-xs text-gray-600 m-0 mb-2 leading-tight">EMATER-RIO, SEDIPAF, GOVERNO DO ESTADO DO RIO DE JANEIRO</p>
         <h5 class="text-base font-semibold text-gray-800 m-0">Total de Barraginhas: 
             <span id="total-counter" class="text-blue-600 text-lg font-bold">0</span>
+        </h5>
+        <!-- LINHA ADICIONADA -->
+        <h5 class="text-base font-semibold text-gray-800 m-0 mt-1">Volume Total: 
+            <span id="volume-counter" class="text-blue-600 text-lg font-bold">0</span> litros
         </h5>
     </div>
 
@@ -89,15 +90,17 @@
         // CONFIGURAÇÃO DA API SUPABASE (ATENÇÃO AQUI!)
         // ====================================================================
 
-        // 1. Cole a sua URL do Supabase aqui (Encontre em Project Settings > API > Project URL)
+        // 1. Cole a sua URL do Supabase aqui
         const SUPABASE_URL = 'https://ooucatlowyexiuscophb.supabase.co';
 
-        // 2. Cole a sua chave 'anon' (pública) aqui (Encontre em Project Settings > API > Project API Keys)
+        // 2. Cole a sua chave 'anon' (pública) aqui
+        // (Esta é a chave pública de exemplo, substitua pela sua se for diferente)
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vdWNhdGxvd3lleGl1c2NvcGhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxMTA3ODUsImV4cCI6MjA3NzY4Njc4NX0.tVOomCoeorIU0tpmtt1LhDpg2SOAFACnwbF3qouEsxs'; // ATENÇÃO: Cole sua chave 'anon' aqui
 
         // ====================================================================
         // INICIALIZAÇÃO DO CLIENTE SUPABASE
         // ====================================================================
+        // ... (código de inicialização sem alterações) ...
         let supabaseClient;
         let apiKeyValid = false;
         
@@ -118,14 +121,10 @@
         // ====================================================================
         // INICIALIZAÇÃO DO MAPA (LEAFLET)
         // ====================================================================
-
-        // Coordenadas centrais (aproximadamente Rio de Janeiro)
+        // ... (código do mapa e camadas base sem alterações) ...
         const mapCenter = [-21.43, -41.68];
-
-        // Inicializa o mapa
         const map = L.map('map').setView(mapCenter, 9);
 
-        // Camadas de Mapa Base
         const streetsLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         });
@@ -138,20 +137,16 @@
             attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
         });
 
-        // Adiciona a camada de ruas como padrão
         streetsLayer.addTo(map);
 
-        // Objeto de Mapas Base para o controle
         const baseMaps = {
             "Mapa Básico": streetsLayer,
             "Satélite": satelliteLayer,
             "Topografia": topoLayer
         };
 
-        // Objeto para as Camadas de Sobreposição (Overlay)
         const overlayMaps = {};
         
-        // Adiciona o controle de camadas
         const layerControl = L.control.layers(baseMaps, overlayMaps, { 
             position: 'topright',
             collapsed: false 
@@ -161,7 +156,7 @@
         // FUNÇÕES DE CARREGAMENTO DE DADOS (SUPABASE)
         // ====================================================================
 
-        // 1. Carregar Pontos de Barraginhas
+        // 1. Carregar Pontos de Barraginhas (FUNÇÃO ATUALIZADA)
         // --------------------------------------------------------------------
         async function loadBarraginhas() {
             try {
@@ -176,20 +171,31 @@
                     console.warn("Nenhum dado de barraginha foi retornado.");
                     return;
                 }
-
-                // ATUALIZA O CONTADOR NO PAINEL DE TÍTULO
-                document.getElementById('total-counter').innerText = data.length;
                 
-                // Extrai o GeoJSON da resposta
-                const geojsonData = data.map(item => item.geojson_feature);
+                // Extrai o GeoJSON e calcula o volume total
+                let volumeTotalM3 = 0;
+                const geojsonData = data.map(item => {
+                    const feature = item.geojson_feature;
+                    // Acumula o volume
+                    if (feature.properties && feature.properties.volume_m3) {
+                        volumeTotalM3 += parseFloat(feature.properties.volume_m3) || 0;
+                    }
+                    return feature; // Retorna o geojson para a camada
+                });
 
-                // Cria UMA camada para TODAS as barraginhas, sem filtro
+                // Converte m³ para litros
+                const volumeTotalLitros = volumeTotalM3 * 1000;
+
+                // ATUALIZA OS CONTADORES NO PAINEL DE TÍTULO
+                document.getElementById('total-counter').innerText = data.length;
+                document.getElementById('volume-counter').innerText = formatarNumero(volumeTotalLitros);
+                
+                // Cria UMA camada para TODAS as barraginhas
                 const barraginhasLayer = L.geoJSON(geojsonData, {
-                    // Sem filtro, carrega todos os pontos
                     pointToLayer: (feature, latlng) => {
                         return L.circleMarker(latlng, {
                             radius: 5,
-                            fillColor: "#0078ff", // Azul para todos os pontos
+                            fillColor: "#0078ff",
                             color: "#000",
                             weight: 1,
                             opacity: 1,
@@ -199,10 +205,7 @@
                     onEachFeature: onEachBarraginha
                 });
                 
-                // Adiciona a camada única ao controle
                 layerControl.addOverlay(barraginhasLayer, "Barraginhas");
-                
-                // Adiciona a camada ao mapa
                 barraginhasLayer.addTo(map);
 
             } catch (error) {
@@ -210,22 +213,15 @@
             }
         }
 
-        // Função de Pop-up para cada Barraginha
+        // Função de Pop-up para cada Barraginha (FUNÇÃO ATUALIZADA)
         function onEachBarraginha(feature, layer) {
             if (feature.properties) {
                 
-                // Formatação da Data (de MM/DD/YYYY para DD/MM/YYYY)
+                // FUNÇÃO DE FORMATAÇÃO MOVIDA PARA DENTRO PARA SIMPLICIDADE
+                // (O SQL agora envia data_crua)
                 let dataFormatada = "N/A";
-                if (feature.properties.data) {
-                    try {
-                        const partes = feature.properties.data.split('/');
-                        if (partes.length === 3) {
-                            // Assumindo formato MM/DD/YYYY
-                            dataFormatada = `${partes[1]}/${partes[0]}/${partes[2]}`;
-                        }
-                    } catch (e) {
-                        console.warn("Erro ao formatar data:", feature.properties.data);
-                    }
+                if (feature.properties.data_crua) {
+                    dataFormatada = formatarDataMista_Corrigido(feature.properties.data_crua);
                 }
 
                 // Extrai coordenadas
@@ -250,6 +246,7 @@
 
         // 2. Carregar Camada de Municípios
         // --------------------------------------------------------------------
+        // ... (código de municípios sem alterações) ...
         async function loadMunicipios() {
             try {
                 const { data, error } = await supabaseClient
@@ -277,18 +274,17 @@
                 });
                 
                 layerControl.addOverlay(municipiosLayer, "Municípios");
-                municipiosLayer.addTo(map); // Descomente se quiser que carregue por padrão
+                municipiosLayer.addTo(map);
 
             } catch (error) {
                 console.error("Erro ao buscar dados dos municípios:", error);
             }
         }
 
-        // Função de Pop-up para cada Município
+        // Função de Pop-up para cada Município (FUNÇÃO ATUALIZADA)
         function onEachMunicipio(feature, layer) {
             if (feature.properties) {
-                // CORREÇÃO: Os dados são "planos" (flat), não estão dentro de 'stats'
-                // A função SQL que você colou fornece as propriedades diretamente.
+                // CORREÇÃO: Lê as propriedades "planas" (flat)
                 const props = feature.properties || {};
                 const popupContent = `
                     <strong><h3>${props.nome_municipio || 'Município'}</h3></strong><br>
@@ -306,6 +302,7 @@
 
         // 3. Carregar Camada de Regiões
         // --------------------------------------------------------------------
+        // ... (código de regiões sem alterações) ...
         async function loadRegioesPolygons() {
             try {
                 const { data, error } = await supabaseClient
@@ -333,7 +330,7 @@
                 });
                 
                 layerControl.addOverlay(regioesLayer, "Regiões");
-                // regioesLayer.addTo(map); // Carrega por padrão
+                regioesLayer.addTo(map); // Carrega por padrão
 
             } catch (error) {
                 console.error("Erro ao buscar dados das regiões:", error);
@@ -346,7 +343,7 @@
                 const props = feature.properties;
                 const popupContent = `
                     <strong><h3>Região ${props.nome_regiao || ''}</h3></strong><br>
-                    <strong>Beneficiários:</strong> ${props.total_beneficiarios || 0}<br>
+                    <strong>Beneficiários:</strong> ${props.num_beneficiarios || 0}<br>
                     <strong>Barraginhas:</strong> ${props.total_barraginhas || 0}<br>
                     <strong>Volume Total (m³):</strong> ${Math.round(props.volume_total) || 0}
                 `;
@@ -354,9 +351,63 @@
             }
         }
         
-        // 4. Função de Erro de API
+        // 4. Funções "Helper" e de Erro
         // --------------------------------------------------------------------
+
+        // FUNÇÃO HELPER DE FORMATAÇÃO DE DATA (ATUALIZADA)
+        function formatarDataMista_Corrigido(dataString) {
+            if (!dataString) return "N/A";
+            
+            try {
+                // Tenta dividir por / ou -
+                const separador = dataString.includes('/') ? '/' : '-';
+                const partes = dataString.split(separador);
+                
+                if (partes.length !== 3) return dataString; // Retorna original se não for [3 partes]
+
+                let dia, mes, ano;
+                
+                // Formato Americano (MM/DD/YYYY) - Detecta se a 1ª parte é <= 12 e a 2ª é > 12
+                if (parseInt(partes[0]) <= 12 && parseInt(partes[1]) > 12) {
+                    mes = partes[0];
+                    dia = partes[1];
+                    ano = partes[2];
+                } 
+                // Formato Brasileiro (DD/MM/YYYY) - Detecta se a 1ª parte é > 12
+                else if (parseInt(partes[0]) > 12) {
+                    dia = partes[0];
+                    mes = partes[1];
+                    ano = partes[2];
+                } 
+                // Ambíguo (ex: 05/10/2025) - Assume Brasileiro (DD/MM)
+                else {
+                    dia = partes[0];
+                    mes = partes[1];
+                    ano = partes[2];
+                }
+                
+                // Garante 2 dígitos
+                dia = dia.padStart(2, '0');
+                mes = mes.padStart(2, '0');
+
+                return `${dia}/${mes}/${ano}`;
+            
+            } catch (e) {
+                console.warn("Erro ao analisar data:", dataString, e);
+                return dataString; // Retorna o original se houver erro
+            }
+        }
+
+        // FUNÇÃO HELPER DE FORMATAÇÃO DE NÚMERO (ADICIONADA)
+        function formatarNumero(num) {
+            // Arredonda, converte para string e usa a formatação local pt-BR
+            // para adicionar os pontos de milhar (ex: 1000000 -> "1.000.000")
+            return Math.round(num).toLocaleString('pt-BR');
+        }
+        
+        // Função de Erro de API
         function showApiError() {
+            // ... (código da showApiError sem alterações) ...
             const errorBox = document.createElement('div');
             errorBox.className = 'api-error-box';
             errorBox.innerHTML = `
@@ -372,12 +423,11 @@
         // ====================================================================
         
         if (apiKeyValid) {
-            // Se a chave for válida, carrega todos os dados
+            // ... (código de inicialização sem alterações) ...
             loadBarraginhas();
             loadMunicipios();
             loadRegioesPolygons();
         } else {
-            // Se a chave for o placeholder, mostra a caixa de erro
             showApiError();
         }
         
@@ -385,8 +435,3 @@
 
 </body>
 </html>
-
-
-
-
-
