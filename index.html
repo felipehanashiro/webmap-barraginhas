@@ -330,7 +330,7 @@
                 });
                 
                 layerControl.addOverlay(regioesLayer, "Regiões");
-                regioesLayer.addTo(map); // Carrega por padrão
+                //regioesLayer.addTo(map); // Carrega por padrão
 
             } catch (error) {
                 console.error("Erro ao buscar dados das regiões:", error);
@@ -343,7 +343,7 @@
                 const props = feature.properties;
                 const popupContent = `
                     <strong><h3>Região ${props.nome_regiao || ''}</h3></strong><br>
-                    <strong>Beneficiários:</strong> ${props.num_beneficiarios || 0}<br>
+                    <strong>Beneficiários:</strong> ${props.total_beneficiarios || 0}<br>
                     <strong>Barraginhas:</strong> ${props.total_barraginhas || 0}<br>
                     <strong>Volume Total (m³):</strong> ${Math.round(props.volume_total) || 0}
                 `;
