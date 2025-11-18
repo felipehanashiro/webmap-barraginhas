@@ -221,8 +221,8 @@
                 // FUNÇÃO DE FORMATAÇÃO MOVIDA PARA DENTRO PARA SIMPLICIDADE
                 // (O SQL agora envia data_crua)
                 let dataFormatada = "N/A";
-                if (feature.properties.data_crua) {
-                    dataFormatada = formatarDataMista_Corrigido(feature.properties.data_crua);
+                if (feature.properties.data) {
+                    dataFormatada = formatarData(feature.properties.data);
                 }
 
                 // Extrai coordenadas
@@ -356,49 +356,21 @@
         // --------------------------------------------------------------------
 
         // FUNÇÃO HELPER DE FORMATAÇÃO DE DATA (ATUALIZADA)
-        function formatarDataMista_Corrigido(dataString) {
+        function formatarData(dataString) {
             if (!dataString) return "N/A";
-            
-            try {
-                // Tenta dividir por / ou -
-                const separador = dataString.includes('/') ? '/' : '-';
-                const partes = dataString.split(separador);
-                
-                if (partes.length !== 3) return dataString; // Retorna original se não for [3 partes]
+    
+	    // Divide a string onde houver barras
+    	    // Exemplo entrada: "11/18/2025" -> vira ["11", "18", "2025"]
+            const partes = dataString.split('/');
+    
+            // Se por acaso não tiver 3 partes, devolve como está para não dar erro
+            if (partes.length !== 3) return dataString;
 
-                let dia, mes, ano;
-                
-                // Formato Americano (MM/DD/YYYY) - Detecta se a 1ª parte é <= 12 e a 2ª é > 12
-                if (parseInt(partes[0]) <= 12 && parseInt(partes[1]) > 12) {
-                    mes = partes[0];
-                    dia = partes[1];
-                    ano = partes[2];
-                } 
-                // Formato Brasileiro (DD/MM/YYYY) - Detecta se a 1ª parte é > 12
-                else if (parseInt(partes[0]) > 12) {
-                    dia = partes[0];
-                    mes = partes[1];
-                    ano = partes[2];
-                } 
-                // Ambíguo (ex: 05/10/2025) - Assume Brasileiro (DD/MM)
-                else {
-                    dia = partes[0];
-                    mes = partes[1];
-                    ano = partes[2];
-                }
-                
-                // Garante 2 dígitos
-                dia = dia.padStart(2, '0');
-                mes = mes.padStart(2, '0');
+            // Monta na ordem Brasileira: Dia (índice 1) / Mês (índice 0) / Ano (índice 2)
+            return `${partes[1]}/${partes[0]}/${partes[2]}`;
+         }
 
-                return `${dia}/${mes}/${ano}`;
-            
-            } catch (e) {
-                console.warn("Erro ao analisar data:", dataString, e);
-                return dataString; // Retorna o original se houver erro
-            }
-        }
-
+     
         // FUNÇÃO HELPER DE FORMATAÇÃO DE NÚMERO (ADICIONADA)
         function formatarNumero(num) {
             // Arredonda, converte para string e usa a formatação local pt-BR
